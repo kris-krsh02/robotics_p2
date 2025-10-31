@@ -9,9 +9,21 @@ class WallFollower:
     def __init__(self, position_tracker):
         self.position_tracker = position_tracker
         self.wall_hit_point = position_tracker.current_position
+        self.target_point = position_tracker.target_point
         self.laser_readings = None
         self.linear_velocity = 1
         self.angular_velocity = 0.5
+
+        # Line parameters for Bug 2
+        self.m = (self.wall_hit_point[1] - self.target_point[1]) / (
+            (self.wall_hit_point[0] - self.target_point[0])
+        )  # slope
+        self.b = self.wall_hit_point[1] - self.m * self.wall_hit_point[0]  # y-intercept
+
+        self.hit_point_target_distance = math.sqrt(
+            math.pow((self.wall_hit_point[0] - self.target_point[0]), 2)
+            + math.pow((self.wall_hit_point[1] - self.target_point[1]), 2)
+        ) # to check if new point on line is closer than hit point
 
         # self.pub = rospy.Publisher("/command_type", String, queue_size=1)
         self.pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
@@ -46,7 +58,7 @@ class WallFollower:
                 break
 
             self.pub.publish(twist)
-            rospy.sleep(0.1)
+            rospy.sleep(0.1) # quick enough to detect changes on time?
 
     def obstacle_detected(self):
         ranges = self.laser_readings
@@ -105,9 +117,19 @@ class WallFollower:
 
     def reached_closer_point(self):
         """
-        Check if we have reached a point on 
+        Check if we have reached a point on the line to the target that is closer than the wall hit point.
         """
-        pass
+        curr_pos = self.position_tracker.current_position
+        if curr_pos[1] == self.m * curr_pos[0] + self.b:
+            new_point_distance = math.sqrt(
+                math.pow((curr_pos[0] - self.target_point[0]), 2)
+                + math.pow((curr_pos[1] - self.target_point[1]), 2)
+            )
+            
+            if new_point_distance < self.hit_point_target_distance:
+                return True
+
+        return False
 
     def scan_callback(self, data):
         self.laser_readings = data.ranges

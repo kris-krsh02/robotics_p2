@@ -46,6 +46,8 @@ if __name__ == "__main__":
         curr_pos = (0, 0, 0)
         for point in controller.task_order:
             time_to_turn = path_planner.get_vel_commands(curr_pos, point)
-            navigator.run(obstacle_avoider, position_tracker, time_to_turn, point)
+            navigator.run(
+                path_planner, obstacle_avoider, position_tracker, time_to_turn, point
+            )
 
         print("All tasks completed. Enter new tasks or type 'exit' to quit.")

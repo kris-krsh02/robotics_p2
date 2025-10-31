@@ -6,6 +6,7 @@ from scipy.spatial.transform import Rotation
 class PositionTracker:
     def __init__(self):
         self.current_position = None  # (x, y, theta)
+        self.target = None
         rospy.init_node("position_tracker_node", anonymous=True)
         self.sub = rospy.Subscriber("/odom", Odometry, self.callback)
         self.pub = rospy.Publisher("/command_type", str, queue_size=1)
